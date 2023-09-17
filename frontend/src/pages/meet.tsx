@@ -20,6 +20,8 @@ import {
   Input,
 } from "@chakra-ui/react";
 import { doc, setDoc } from "firebase/firestore";
+import { addDoc } from "firebase/firestore";
+import { getDoc } from "firebase/firestore";
 
 // Define an interface for the user profile
 interface UserProfile {
@@ -39,10 +41,11 @@ export default function Meet() {
   const [userID, setUserID] = useState(user?.uid);
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
 
-  const likedHandler = (profileID: string) => async () => {
+  const likedHandler = (profileID: string, userID: string) => async () => {
     try {
       const userDocRef = doc(db, "users", userID);
 
+      // Step 1: Add the liked profile's ID to the current user's liked collection
       await setDoc(
         userDocRef,
         {
@@ -52,6 +55,44 @@ export default function Meet() {
         },
         { merge: true }
       );
+
+      // Step 2: Check if there's a mutual like (match)
+      const likedProfileDocRef = doc(db, "users", profileID);
+      const likedProfileDoc = await getDoc(likedProfileDocRef);
+
+      if (likedProfileDoc.exists()) {
+        const likedProfileData = likedProfileDoc.data();
+
+        console.log("Liked profile data:", likedProfileData);
+
+        // Check if the current user's ID exists in the liked profile's liked collection
+        if (likedProfileData?.liked[userID]) {
+          console.log("Match!");
+          // Add the current user's ID to the liked profile's matches collection
+          await setDoc(
+            likedProfileDocRef,
+            {
+              matches: {
+                [userID]: true,
+              },
+            },
+            { merge: true }
+          );
+
+          // Add the liked profile's ID to the current user's matches collection
+          await setDoc(
+            userDocRef,
+            {
+              matches: {
+                [profileID]: true,
+              },
+            },
+            { merge: true }
+          );
+        } else {
+          console.log("No match!");
+        }
+      }
     } catch (error) {
       console.error("Error liking profile:", error);
     }
@@ -208,7 +249,7 @@ export default function Meet() {
 
                 {/* Yes */}
                 <Button
-                  onClick={likedHandler(profile.profileID)}
+                  onClick={likedHandler(profile.profileID, userID)}
                   w={"50%"}
                   backgroundColor={"red.500"}
                 >
