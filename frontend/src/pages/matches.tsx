@@ -5,6 +5,10 @@ import { db } from "../firebase";
 import { Box, Center, Flex, Image, SimpleGrid, Stack, Text } from "@chakra-ui/react";
 import { doc, getDoc } from "firebase/firestore";
 import { getDownloadURL, getStorage, ref } from "firebase/storage";
+import { FaFacebook, FaInstagram, FaPhone } from "react-icons/fa";
+import { SiLinkedin, SiPhonepe, SiVsco } from "react-icons/si";
+import { Input } from "@chakra-ui/input";
+import { Button } from "@chakra-ui/button";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -29,21 +33,16 @@ export default function Matches() {
   const [userID, setUserID] = useState(user?.uid);
 
   const fetchMatchedProfiles = async (userID: string) => {
-
     console.log("Fetching matched profiles for user ID:", userID);
-
 
     try {
       const userDocRef = doc(db, "users", userID);
       const userDoc = await getDoc(userDocRef);
 
-      
-
       if (userDoc.exists()) {
         const matchedProfiles = userDoc.data().matches;
 
         console.log("Matched profiles:", matchedProfiles);
-
 
         const matchedProfilesArray: UserProfile[] = [];
 
@@ -65,9 +64,8 @@ export default function Matches() {
               profileID: profileID,
             };
 
-            fetchUserProfilePicture(profileID).then((imageUrl) => {
-              userProfile.image = imageUrl;
-            });
+            const imageUrl = await fetchUserProfilePicture(profileID);
+            userProfile.image = imageUrl;
 
             matchedProfilesArray.push(userProfile);
           }
@@ -124,14 +122,7 @@ export default function Matches() {
                 boxSize={"150px"}
                 overflow={"hidden"}
               >
-                <Image
-                  alt={"Profile image"}
-                  fit={"cover"}
-                  align={"center"}
-                  w={"100%"}
-                  h={"100%"}
-                  src={profile.image}
-                />
+                <Image fit={"cover"} align={"center"} w={"100%"} h={"100%"} src={profile.image} />
               </Box>
 
               <Text fontSize={"xl"} fontWeight={600} mt={4}>
@@ -142,8 +133,42 @@ export default function Matches() {
                 {profile.bio}
               </Text>
 
-              {/* Add buttons or UI elements for interacting with matched profiles */}
-              {/* You can add buttons to message, view profiles, or perform other actions */}
+              <Box mt={4} pt={20}>
+                {/* Instagram */}
+                <Button w={"full"} backgroundColor={"purple.300"} leftIcon={<FaInstagram />}>
+                  <Center>
+                    <Input value={profile.instagramLink} variant="unstyled" />
+                  </Center>
+                </Button>
+
+                {/* Facebook */}
+                <Button w={"full"} backgroundColor={"blue.300"} leftIcon={<FaFacebook />}>
+                  <Center>
+                    <Input value={profile.facebookLink} variant="unstyled" />
+                  </Center>
+                </Button>
+
+                {/* VSCO */}
+                <Button w={"full"} backgroundColor={"black.400"} leftIcon={<SiVsco />}>
+                  <Center>
+                    <Input value={profile.vscoLink} variant="unstyled" />
+                  </Center>
+                </Button>
+
+                {/* LinkedIn */}
+                <Button w={"full"} backgroundColor={"blue.500"} leftIcon={<SiLinkedin />}>
+                  <Center>
+                    <Input value={profile.linkedinLink} variant="unstyled" />
+                  </Center>
+                </Button>
+
+                {/* Phone */}
+                <Button w={"full"} backgroundColor={"blue.500"} leftIcon={<FaPhone />}>
+                  <Center>
+                    <Input value={profile.phoneLink} variant="unstyled" />
+                  </Center>
+                </Button>
+              </Box>
             </Stack>
           </Flex>
         ))}
