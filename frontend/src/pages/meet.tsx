@@ -1,10 +1,25 @@
 import Navbar from "../components/Navbar";
-import { Box, Heading, SimpleGrid, Text, useColorModeValue } from "@chakra-ui/react";
 import React, { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
-import { Flex } from "@chakra-ui/layout";
+import { getDownloadURL, getStorage, ref } from "firebase/storage";
+import { FaFacebook, FaInstagram, FaPhone, FaSave } from "react-icons/fa";
+import { SiLinkedin, SiVsco } from "react-icons/si";
+import {
+  Box,
+  Button,
+  Center,
+  Flex,
+  Heading,
+  Image,
+  Stack,
+  Text,
+  SimpleGrid,
+  useColorModeValue,
+  Input,
+} from "@chakra-ui/react";
+import { doc, setDoc } from "firebase/firestore";
 
 // Define an interface for the user profile
 interface UserProfile {
@@ -15,26 +30,68 @@ interface UserProfile {
   vscoLink: string;
   linkedinLink: string;
   phoneLink: string;
-  image: string; // You might want to change this to the appropriate type
+  image?: string;
+  profileID: string;
 }
 
 export default function Meet() {
-  const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
   const { user } = useAuth();
+  const [userID, setUserID] = useState(user?.uid);
+  const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
+
+  const likedHandler = (profileID: string) => async () => {
+    try {
+      const userDocRef = doc(db, "users", userID);
+
+      await setDoc(
+        userDocRef,
+        {
+          liked: {
+            [profileID]: true,
+          },
+        },
+        { merge: true }
+      );
+    } catch (error) {
+      console.error("Error liking profile:", error);
+    }
+  };
+
+  const dislikedHandler = (profileID: string) => async () => {
+    try {
+      const userDocRef = doc(db, "users", userID);
+
+      await setDoc(
+        userDocRef,
+        {
+          disliked: {
+            [profileID]: true,
+          },
+        },
+        { merge: true }
+      );
+    } catch (error) {
+      console.error("Error disliking profile:", error);
+    }
+  };
+
+  const fetchUserProfilePicture = async (userID: string) => {
+    try {
+      const storage = getStorage();
+      const imageURL = await getDownloadURL(ref(storage, "images/" + userID));
+      return imageURL;
+    } catch (error) {
+      console.error("Error fetching user profile picture:", error);
+    }
+  };
 
   const fetchAllUserProfiles = async () => {
     try {
-      // Create a reference to the collection of user profiles
       const profilesRef = collection(db, "users");
-
-      // Fetch the documents from the collection
       const snapshot = await getDocs(profilesRef);
-
-      // Initialize an array to store user profiles
       const profiles: UserProfile[] = [];
 
-      // Iterate through the documents and extract user profiles
-      snapshot.forEach((doc) => {
+      snapshot.forEach(async (doc) => {
         const profileData = doc.data().profile;
         const profileObject: UserProfile = {
           name: profileData.name,
@@ -44,22 +101,28 @@ export default function Meet() {
           vscoLink: profileData.vscoLink,
           linkedinLink: profileData.linkedinLink,
           phoneLink: profileData.phoneLink,
-          image: profileData.image,
+          profileID: profileData.userID,
         };
+
+        const imageURL = await fetchUserProfilePicture(doc.id);
+        profileObject.image = imageURL;
 
         profiles.push(profileObject);
       });
 
       setUserProfiles(profiles);
-
-      console.log("User profiles:", userProfiles);
     } catch (error) {
       console.error("Error fetching user profiles:", error);
     }
   };
 
   useEffect(() => {
-    // Fetch user profiles when the component mounts
+    setTimeout(() => {
+      setUserID(user?.uid);
+    }, 2000);
+  }, [user?.uid, userID]);
+
+  useEffect(() => {
     fetchAllUserProfiles();
   }, []);
 
@@ -67,64 +130,94 @@ export default function Meet() {
     <div>
       <Navbar />
 
-      <SimpleGrid columns={3} spacing={10} mt={10}>
+      <SimpleGrid columns={{ base: 1, md: 1 }} spacing={10} mt={10}>
         {userProfiles.map((profile, index) => (
           <Flex key={index} direction={"column"} shadow={"lg"}>
-            <Box
-              h={"120px"}
-              bg={"gray.100"}
-              mt={-6}
-              mx={-6}
-              mb={6}
-              pos={"relative"}
-              _after={{
-                content: '""',
-                w: "full",
-                h: "full",
-                pos: "absolute",
-                top: 5,
-                left: 0,
-                backgroundImage: `url(${profile.image})`,
-                filter: "blur(15px)",
-                zIndex: -1,
-              }}
-              _groupHover={{
-                _after: {
-                  filter: "blur(20px)",
-                },
-              }}
+            <Stack
+              direction={"column"}
+              justify={"center"}
+              align={"center"}
+              p={8}
+              rounded={"xl"}
+              minH={"240px"}
             >
               <Box
-                bg={"gray.100"}
-                bgPos={"center"}
-                bgSize={"cover"}
-                w={"full"}
-                h={"full"}
-                pos={"relative"}
-                bgImage={`url(${profile.image})`}
+                position={"relative"}
+                rounded={"full"}
+                boxShadow={"lg"}
+                boxSize={"150px"}
+                overflow={"hidden"}
               >
-                <Box
-                  w={"full"}
-                  h={"full"}
-                  pos={"absolute"}
-                  top={0}
-                  left={0}
-                  bgGradient={"linear(to-b, transparent, black)"}
-                  opacity={0.4}
+                <Image
+                  alt={"Profile image"}
+                  fit={"cover"}
+                  align={"center"}
+                  w={"100%"}
+                  h={"100%"}
+                  src={profile.image}
                 />
               </Box>
-            </Box>
-            <Box px={6} py={10}>
-              <Heading fontSize={"2xl"} fontFamily={"body"} fontWeight={500} mb={2}>
+
+              <Text fontSize={"xl"} fontWeight={600} mt={4}>
                 {profile.name}
-              </Heading>
-              <Text textAlign={"center"} px={3} mb={3} fontSize={"lg"}>
+              </Text>
+
+              <Text fontSize={"md"} color={"gray.500"} mt={2}>
                 {profile.bio}
               </Text>
-              <Text textAlign={"center"} color={"gray.500"} px={3}>
-                {profile.instagramLink}
-              </Text>
-            </Box>
+
+              <Box mt={4} pt={20}>
+                {/* Instagram */}
+                <Button w={"full"} backgroundColor={"purple.300"} leftIcon={<FaInstagram />}>
+                  <Center>
+                    <Input value={profile.instagramLink} variant="unstyled" />
+                  </Center>
+                </Button>
+
+                {/* Facebook */}
+                <Button w={"full"} backgroundColor={"blue.300"} leftIcon={<FaFacebook />}>
+                  <Center>
+                    <Input value={profile.facebookLink} variant="unstyled" />
+                  </Center>
+                </Button>
+
+                {/* VSCO */}
+                <Button w={"full"} backgroundColor={"black.400"} leftIcon={<SiVsco />}>
+                  <Center>
+                    <Input value={profile.vscoLink} variant="unstyled" />
+                  </Center>
+                </Button>
+
+                {/* LinkedIn */}
+                <Button w={"full"} backgroundColor={"blue.500"} leftIcon={<SiLinkedin />}>
+                  <Center>
+                    <Input value={profile.linkedinLink} variant="unstyled" />
+                  </Center>
+                </Button>
+
+                {/* No */}
+                <Button
+                  onClick={dislikedHandler(profile.profileID)}
+                  w={"50%"}
+                  backgroundColor={"green.500"}
+                >
+                  <Center>
+                    <Input value={"Noooooo"} variant="unstyled" />
+                  </Center>
+                </Button>
+
+                {/* Yes */}
+                <Button
+                  onClick={likedHandler(profile.profileID)}
+                  w={"50%"}
+                  backgroundColor={"red.500"}
+                >
+                  <Center>
+                    <Input value={"Yes"} variant="unstyled" />
+                  </Center>
+                </Button>
+              </Box>
+            </Stack>
           </Flex>
         ))}
       </SimpleGrid>
