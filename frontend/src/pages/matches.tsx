@@ -104,7 +104,7 @@ export default function Matches() {
     <div>
       <Navbar />
 
-      <SimpleGrid columns={{ base: 1, md: 1 }} spacing={10} mt={10}>
+      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={10} mt={10}>
         {matchedProfiles.map((profile, index) => (
           <Flex key={index} direction={"column"} shadow={"lg"}>
             <Stack
@@ -133,37 +133,37 @@ export default function Matches() {
                 {profile.bio}
               </Text>
 
-              <Box mt={4} pt={20}>
+              <Box mt={4} pt={1}>
                 {/* Instagram */}
-                <Button w={"full"} backgroundColor={"purple.300"} leftIcon={<FaInstagram />}>
+                {/* <Button w={"full"} backgroundColor={"purple.300"} leftIcon={<FaInstagram />}>
                   <Center>
                     <Input value={profile.instagramLink} variant="unstyled" />
                   </Center>
-                </Button>
+                </Button> */}
 
                 {/* Facebook */}
-                <Button w={"full"} backgroundColor={"blue.300"} leftIcon={<FaFacebook />}>
+                {/* <Button w={"full"} backgroundColor={"blue.300"} leftIcon={<FaFacebook />}>
                   <Center>
                     <Input value={profile.facebookLink} variant="unstyled" />
                   </Center>
-                </Button>
+                </Button> */}
 
                 {/* VSCO */}
-                <Button w={"full"} backgroundColor={"black.400"} leftIcon={<SiVsco />}>
+                {/* <Button w={"full"} backgroundColor={"black.400"} leftIcon={<SiVsco />}>
                   <Center>
                     <Input value={profile.vscoLink} variant="unstyled" />
                   </Center>
-                </Button>
+                </Button> */}
 
                 {/* LinkedIn */}
-                <Button w={"full"} backgroundColor={"blue.500"} leftIcon={<SiLinkedin />}>
+                {/* <Button w={"full"} backgroundColor={"blue.500"} leftIcon={<SiLinkedin />}>
                   <Center>
                     <Input value={profile.linkedinLink} variant="unstyled" />
                   </Center>
-                </Button>
+                </Button> */}
 
                 {/* Phone */}
-                <Button w={"full"} backgroundColor={"blue.500"} leftIcon={<FaPhone />}>
+                <Button w={"full"} backgroundColor={"green.500"} leftIcon={<FaPhone />}>
                   <Center>
                     <Input value={profile.phoneLink} variant="unstyled" />
                   </Center>

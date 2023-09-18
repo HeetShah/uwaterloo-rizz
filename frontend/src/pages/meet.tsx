@@ -240,7 +240,7 @@ export default function Meet() {
                 <Button
                   onClick={dislikedHandler(profile.profileID)}
                   w={"50%"}
-                  backgroundColor={"green.500"}
+                  backgroundColor={"red.500"}
                 >
                   <Center>
                     <Input value={"Noooooo"} variant="unstyled" />
@@ -251,7 +251,7 @@ export default function Meet() {
                 <Button
                   onClick={likedHandler(profile.profileID, userID)}
                   w={"50%"}
-                  backgroundColor={"red.500"}
+                  backgroundColor={"green.500"}
                 >
                   <Center>
                     <Input value={"Yes"} variant="unstyled" />
